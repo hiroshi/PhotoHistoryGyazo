@@ -638,6 +638,10 @@ var AccessToken = React.createClass({
   render: function() {
     return (
       <form onSubmit={this._handleSubmit}>
+        <ol>
+          <li><a href="https://gyazo.com/oauth/applications/new">Create new app</a> with callback URL: <input type='text' value={String(window.location)} readOnly={true} />.</li>
+          <li>Generate your access token.</li>
+        </ol>
         <label>AccessToken</label> <input ref="accessToken" type="text" defaultValue={localStorage.getItem('accessToken')} />
         <button>GO</button>
       </form>
@@ -714,13 +718,6 @@ var PhotoApp = React.createClass({
     }
     return (
        <div>
-         <Navigation
-           index={this.state.visibleThumbIndex}
-           months={this.state.months}
-           count={this.state.ordered.length}
-           loading={this.state.loading}
-           authFailed={this.state.authFailed}
-           email={this.state.email} />
          <AccessToken />
          <Thumbnails
            ordered={this.state.ordered}

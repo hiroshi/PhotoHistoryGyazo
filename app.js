@@ -613,7 +613,7 @@ var Thumbnails = React.createClass({
     for (var i = 0; i < (this.props.rowCount * cols); i++) {
       var item = PhotoStore.files[this.props.ordered[(this.props.startRow * cols) + i]];
       if (item) {
-        thumbs.push(<Thumbnail key={item.id} item={item} />);
+        thumbs.push(<Thumbnail key={item.image_id} item={item} />);
       }
     }
     return (

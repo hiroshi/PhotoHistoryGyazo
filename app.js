@@ -639,7 +639,7 @@ var AccessToken = React.createClass({
     return (
       <form onSubmit={this._handleSubmit}>
         <ol>
-          <li><a href="https://gyazo.com/oauth/applications/new">Create new app</a> with callback URL: <input type='text' value={String(window.location)} readOnly={true} />.</li>
+          <li><a href="https://gyazo.com/oauth/applications/new">Create new app</a> with callback URL: <input type='text' defaultValue={String(window.location)} readOnly={true} size="40" />.</li>
           <li>Generate your access token.</li>
         </ol>
         <label>AccessToken</label> <input ref="accessToken" type="text" defaultValue={localStorage.getItem('accessToken')} />

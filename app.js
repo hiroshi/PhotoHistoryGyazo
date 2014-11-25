@@ -1,4 +1,3 @@
-/** @jsx React.DOM */
 function binSearch(list, compare, options) {
   var min = 0, max = list.length - 1, found = false, index = 0;
   if (!options) {
@@ -281,66 +280,101 @@ var PhotoStore = {
     this.callbackUpdate({loading: loading});
   },
   load: function() {
-    var options = {
-      q: "mimeType contains 'image/' and trashed = false",
-      fields: "items(id,imageMediaMetadata(date,height,width,rotation),thumbnailLink,alternateLink,modifiedDate),nextPageToken",
-      maxResults: 1000
-    };
+    // var options = {
+    //   q: "mimeType contains 'image/' and trashed = false",
+    //   fields: "items(id,imageMediaMetadata(date,height,width,rotation),thumbnailLink,alternateLink,modifiedDate),nextPageToken",
+    //   maxResults: 1000
+    // };
     // satrt loading
     if (this.loading) {
       return;
     }
     this.setLoading(true);
-    promiseGAPIExecute(gapi.client.drive.files.list, options)
-    .progress(function(resp) {
-      if (resp) {
-        console.log("progress: " + resp.items.length);
-        //var items = this.items;
-        resp.items.forEach(function(item) {
-          // imageMediaMetadata.date may be in '2014:08:13 17:57:04' format,
-          // so convert it to be able to be parsed as Date.
-          var dateString = item.imageMediaMetadata.date;
-          if (dateString) {
-            var m = dateString.match(/(\d{4}):(\d{2}):(.*)/);
-            if (m) {
-              dateString = m[1] + "/" + m[2] + "/" + m[3];
-            }
-          } else {
-            dateString = item.modifiedDate;
-          }
-          item._date = dateString ? new Date(dateString) : new Date();
-          if (!this.files[item.id]) {
+    var params = {
+      access_token: localStorage.getItem('accessToken'),
+      per_page: 100,
+      page: 1
+    };
+    var _getImage = function(params) {
+      var url = "https://api.gyazo.com/api/images?" + $.param(params);
+      console.log('url: ' + url);
+      $.getJSON(url, function(images) {
+        console.log("progress: " + images.length);
+        images.forEach(function(item) {
+          item._date = new Date(item.created_at.replace(/\+(\d{2})00$/, "+$1:00"));
+          if (!this.files[item.image_id]) {
             binSearch(this.ordered, function(fileId) {
               return this.files[fileId]._date - item._date;
             }.bind(this), {atIndex: function(index) {
-              this.ordered.splice(index, 0, item.id);
+              this.ordered.splice(index, 0, item.image_id);
             }.bind(this)});
           }
-          this.files[item.id] = item;
-          // binSearch(this.items, function(fileId) {
-          //   return this.files[fileId]._date - item._date;
-          //   //return e._date - item._date;
-          // }, {atIndex: function(itemIndex) {
-          //   if (items[itemIndex] && items[itemIndex].id == item.id) {
-          //     items[itemIndex] = item;
-          //   } else {
-          //     items.splice(itemIndex, 0, item);
-          //   }
-          // }.bind(this)});
-        }.bind(this));
-        //this.items = items;
-        this.updateMonths();
-        this.callbackUpdate({ordered: this.ordered, months: this.yearMonths});
-      }
-    }.bind(this))
-    .catch(function(err) {
-      this.setLoading(false);
-      console.error(err);
-    }.bind(this))
-    .done(function(resp) {
-      this.setLoading(false);
-      this.storeCache();
-    }.bind(this));
+          this.files[item.image_id] = item;
+        }.bind(this))
+        // this.updateMonths();
+        // this.callbackUpdate({ordered: this.ordered, months: this.yearMonths});
+        this.callbackUpdate({ordered: this.ordered});
+        if (params.per_page == images.length) {
+          params.page += 1
+          _getImage(params);
+        } else {
+          this.setLoading(false);
+          // this.storeCache();
+        }
+      }.bind(this));
+    }.bind(this);
+    _getImage(params)
+
+    // promiseGAPIExecute(gapi.client.drive.files.list, options)
+    // .progress(function(resp) {
+    //   if (resp) {
+    //     console.log("progress: " + resp.items.length);
+    //     //var items = this.items;
+    //     resp.items.forEach(function(item) {
+    //       // imageMediaMetadata.date may be in '2014:08:13 17:57:04' format,
+    //       // so convert it to be able to be parsed as Date.
+    //       var dateString = item.imageMediaMetadata.date;
+    //       if (dateString) {
+    //         var m = dateString.match(/(\d{4}):(\d{2}):(.*)/);
+    //         if (m) {
+    //           dateString = m[1] + "/" + m[2] + "/" + m[3];
+    //         }
+    //       } else {
+    //         dateString = item.modifiedDate;
+    //       }
+    //       item._date = dateString ? new Date(dateString) : new Date();
+    //       if (!this.files[item.id]) {
+    //         binSearch(this.ordered, function(fileId) {
+    //           return this.files[fileId]._date - item._date;
+    //         }.bind(this), {atIndex: function(index) {
+    //           this.ordered.splice(index, 0, item.id);
+    //         }.bind(this)});
+    //       }
+    //       this.files[item.id] = item;
+    //       // binSearch(this.items, function(fileId) {
+    //       //   return this.files[fileId]._date - item._date;
+    //       //   //return e._date - item._date;
+    //       // }, {atIndex: function(itemIndex) {
+    //       //   if (items[itemIndex] && items[itemIndex].id == item.id) {
+    //       //     items[itemIndex] = item;
+    //       //   } else {
+    //       //     items.splice(itemIndex, 0, item);
+    //       //   }
+    //       // }.bind(this)});
+    //     }.bind(this));
+    //     //this.items = items;
+    //     this.updateMonths();
+    //     this.callbackUpdate({ordered: this.ordered, months: this.yearMonths});
+    //   }
+    // }.bind(this))
+    // .catch(function(err) {
+    //   this.setLoading(false);
+    //   console.error(err);
+    // }.bind(this))
+    // .done(function(resp) {
+    //   this.setLoading(false);
+    //   this.storeCache();
+    // }.bind(this));
   },
   // getItemsSince: function(date) {
   //   var index = 0;
@@ -536,27 +570,28 @@ var Navigation = React.createClass({
 
 var Thumbnail = React.createClass({
   _handleError: function(e) {
-    //console.error(e.nativeEvent);
-    gapi.client.drive.files.get({fileId: this.props.item.id, fields: "thumbnailLink"}).execute(function(resp) {
-      // TODO: refactoring...
-      PhotoStore.files[this.props.item.id].thumbnailLink = resp.thumbnailLink;
-      console.log("update thumbnail: " + this.props.item.id);
-      PhotoStore.callbackUpdate({files: PhotoStore.files});
-      // Try to re-load all if not yet.
-      PhotoStore.load();
-    }.bind(this));
+    // //console.error(e.nativeEvent);
+    // gapi.client.drive.files.get({fileId: this.props.item.id, fields: "thumbnailLink"}).execute(function(resp) {
+    //   // TODO: refactoring...
+    //   PhotoStore.files[this.props.item.id].thumbnailLink = resp.thumbnailLink;
+    //   console.log("update thumbnail: " + this.props.item.id);
+    //   PhotoStore.callbackUpdate({files: PhotoStore.files});
+    //   // Try to re-load all if not yet.
+    //   PhotoStore.load();
+    // }.bind(this));
   },
   render: function() {
-    var meta = this.props.item.imageMediaMetadata;
-    var portrait = (Number(meta.width) < Number(meta.height)) ^ (meta.rotation % 2);
+    //var meta = this.props.item.imageMediaMetadata;
+    //var portrait = (Number(meta.width) < Number(meta.height)) ^ (meta.rotation % 2);
+    var portrait = true;
     var imgStyle = portrait ? {width: "100%"} : {height: "100%"};
     var date = this.props.item._date;
     var dateLabel = shortDateTimeString(date);
     // <span className="none">{meta}</span>
     return (
       <div className="thumb">
-        <a name={yearMonthString(this.props.item._date)} href={this.props.item.alternateLink} target="_blank">
-          <img src={this.props.item.thumbnailLink} style={imgStyle} onError={this._handleError} />
+        <a name={yearMonthString(this.props.item._date)} href={this.props.item.permalink_url} target="_blank">
+          <img src={this.props.item.thumb_url} style={imgStyle} onError={this._handleError} />
           <div className="label">{dateLabel}</div>
         </a>
       </div>
@@ -573,7 +608,7 @@ var Thumbnails = React.createClass({
       'height': Math.ceil(total / cols) * getThumbHeight(),
     };
     var visible_style = {
-      'padding-top': this.props.startRow * getThumbHeight(),
+      'paddingTop': this.props.startRow * getThumbHeight(),
     };
     for (var i = 0; i < (this.props.rowCount * cols); i++) {
       var item = PhotoStore.files[this.props.ordered[(this.props.startRow * cols) + i]];
@@ -592,6 +627,25 @@ var Thumbnails = React.createClass({
   }
 });
 
+var AccessToken = React.createClass({
+  _handleSubmit: function(event) {
+    event.preventDefault();
+    var accessToken = this.refs.accessToken.getDOMNode().value.trim();
+    console.log('accessToken: ' + accessToken);
+    localStorage.setItem('accessToken', accessToken);
+    PhotoStore.load();
+  },
+  render: function() {
+    return (
+      <form onSubmit={this._handleSubmit}>
+        <label>AccessToken</label> <input ref="accessToken" type="text" defaultValue={localStorage.getItem('accessToken')} />
+        <button>GO</button>
+      </form>
+    );
+  }
+});
+
+
 var PhotoApp = React.createClass({
   getInitialState: function() {
     return {
@@ -607,6 +661,7 @@ var PhotoApp = React.createClass({
     PhotoStore.registerUpdate(function(updates) {
       this.setState(updates);
     }.bind(this));
+    //PhotoStore.load();
     var _updatePosition = function() {
        //var y = window.scrollY;
       //console.log(window.scrollY);
@@ -666,6 +721,7 @@ var PhotoApp = React.createClass({
            loading={this.state.loading}
            authFailed={this.state.authFailed}
            email={this.state.email} />
+         <AccessToken />
          <Thumbnails
            ordered={this.state.ordered}
            startRow={this.state.visibleThumbIndex / getCols()}
@@ -676,7 +732,7 @@ var PhotoApp = React.createClass({
   }
 });
 
-window.App = React.renderComponent(
+window.App = React.render(
   <PhotoApp />,
   document.getElementById('app')
 );

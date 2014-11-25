@@ -570,7 +570,7 @@ var Navigation = React.createClass({
 
 var Thumbnail = React.createClass({
   _handleError: function(e) {
-    // //console.error(e.nativeEvent);
+    console.error(e.nativeEvent);
     // gapi.client.drive.files.get({fileId: this.props.item.id, fields: "thumbnailLink"}).execute(function(resp) {
     //   // TODO: refactoring...
     //   PhotoStore.files[this.props.item.id].thumbnailLink = resp.thumbnailLink;

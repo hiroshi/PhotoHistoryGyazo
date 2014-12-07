@@ -247,7 +247,7 @@ var PhotoStore = {
         var item = this.files[fileId];
         if (!cache.files[fileId]) {
           binSearch(cache.ordered, function(cacheFileId) {
-            return cache.files[cacheFileId]._date - item._date;
+            return item._date - cache.files[cacheFileId]._date;
           }, {atIndex: function(index) {
             cache.ordered.splice(index, 0, item.id);
           }});
@@ -304,7 +304,7 @@ var PhotoStore = {
           item._date = new Date(item.created_at.replace(/\+(\d{2})00$/, "+$1:00"));
           if (!this.files[item.image_id]) {
             binSearch(this.ordered, function(fileId) {
-              return this.files[fileId]._date - item._date;
+              return item._date - this.files[fileId]._date;
             }.bind(this), {atIndex: function(index) {
               this.ordered.splice(index, 0, item.image_id);
             }.bind(this)});
